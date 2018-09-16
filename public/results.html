@@ -1,0 +1,78 @@
+<html lang="en">
+  <head>
+    <style src="css/style.css"></style>
+    <title>CS4241 Assignment 2</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+    <link rel="icon" href="http://icons.iconarchive.com/icons/flat-icons.com/flat/256/Beer-icon.png">
+    <script>
+
+    function addRow(tableID, beer) {
+    			var table = document.getElementById(tableID);
+
+    			var rowCount = table.rows.length;
+    			var row = table.insertRow(rowCount);
+
+          var fields = beer.fields;
+
+    			var name = row.insertCell(0);
+    			name.innerHTML = fields.name;
+
+    			var abv = row.insertCell(1);
+    			abv.innerHTML = fields.abv;
+
+    			var style = row.insertCell(2);
+          style.innerHTML = fields.style_name;
+
+          var category = row.insertCell(3);
+          category.innerHTML = fields.cat_name;
+
+          var brewer = row.insertCell(4);
+          brewer.innerHTML = fields.name_breweries;
+
+          var country = row.insertCell(5);
+          country.innerHTML = fields.country;
+    }
+
+    function populateTable() {
+      xhr = new XMLHttpRequest()
+      xhr.onreadystatechange = handle_res
+      xhr.open("GET", "/data")
+      xhr.send()
+    }
+
+    function handle_res() {
+	     if(this.readyState != 4) return;
+	     if(this.status != 200) {
+         // error
+       }
+       console.log( JSON.parse(this.responseText) )
+       var results = JSON.parse(this.responseText);
+       results.forEach(function(d) {
+         addRow("results", d);
+       });
+    }
+
+    window.onload = populateTable;
+    </script>
+  </head>
+  <body style="background-image: url(barImage.jpg); background-size: cover;">
+    <br>
+    <input id="back" type="button" value="Back" onclick="window.location='/index.html'"></input>
+    <div class="content">
+      <table id="results" style="color:white">
+        <colgroup>
+          <col style="background-color:#ebb86e;">
+          <col span="5" style="background-color:#18343d">
+        </colgroup>
+        <tr>
+          <th>Name</th>
+          <th>ABV</th>
+          <th>Style</th>
+          <th>Category</th>
+          <th>Brewer</th>
+          <th>Country</th>
+        </tr>
+      </table>
+  </body>
+</html>
