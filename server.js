@@ -55,6 +55,26 @@ if (req.method === 'GET') {
 server.listen(process.env.PORT || port);
 console.log('listening on 8000')
 
+const { Client } = require('pg');
+
+const client = new Client({
+  connectionString: 'postgres://hjxnvsrqrnlmdu:4b21f0ed4248cc69fc625ff2bfbb50b82a85faaa2ef6b389f5dfcdec1343e605@ec2-174-129-225-9.compute-1.amazonaws.com:5432/d8j0qsghq908nu',
+  ssl: true,
+});
+
+client.connect();
+
+console.log('connected to client');
+
+client.query('SELECT table_schema,table_name FROM information_schema.tables;', (err, res) => {
+  if (err) throw err;
+  for (let row of res.rows) {
+    console.log(JSON.stringify(row));
+  }
+  client.end();
+});
+
+console.log('you already know');
 
 //   // The whole response has been received. Print out the result.
 //   resp.on('end', () => {

@@ -8,6 +8,7 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "pg": "^7.4.3",
     "xmlhttprequest": "^1.8.0"
   }
 }
