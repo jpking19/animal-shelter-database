@@ -145,7 +145,7 @@ if (req.method === 'GET') {
 
         // Delete animal of given id in db
         query = `DELETE FROM myschema.animals
-                 WHERE id = ${jsonID.id};
+                 WHERE id = '${jsonID.id}';
         `;
         client.query(query, (err, dbResponse) => {
           if (err) throw err;
