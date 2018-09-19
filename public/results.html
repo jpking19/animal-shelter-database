@@ -1,77 +1,230 @@
 <html lang="en">
   <head>
-    <style src="css/style.css"></style>
-    <title>CS4241 Assignment 2</title>
+    <style src="css/style.css">
+      .header {
+        background-color: #F1F1F1;
+        height: 220px;
+        padding: 20px;
+      }
+      .header-middle {
+        text-align: center;
+        width: 30%;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .header-right {
+        text-align: center;
+        float: right;
+        width: 35%;
+        margin: auto
+      }
+      .header-left {
+        text-align: center;
+        float: left;
+        width: 35%;
+        margin: auto;
+      }
+      .buttons {
+        height: 80px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+      }
+      .buttons-empty1 {
+        text-align: center;
+        float: left;
+        width: 75%;
+        margin: auto;
+      }
+      .buttons-empty2 {
+        text-align: center;
+        float: right;
+        width: 10%;
+        margin: auto;
+      }
+      .buttons-create {
+        text-align: center;
+        float: right;
+        width: 10%;
+        margin: auto;
+        margin-right: 5%;
+      }
+      .buttons-delete {
+        text-align: center;
+        float: right;
+        width: 10%;
+        margin: auto
+      }
+      .boxes {
+
+      }
+      #delete {
+        position: relative;
+        top: 0;
+        left: 0;
+        width: 80px;
+        height: 80px;
+      }
+      #create {
+        position: relative;
+        width: 80px;
+        height: 80px;
+      }
+    </style>
+    <title>CS4241 Assignment 3</title>
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="css/style.css"/>
-    <link rel="icon" href="http://icons.iconarchive.com/icons/flat-icons.com/flat/256/Beer-icon.png">
+    <link rel="icon" href="https://freestencilgallery.com/wp-content/uploads/2016/07/Dog-Paw-Print-Stencil-thumb.jpg">
     <script>
+    // Retrieves a list of all animals from db
+    function retrieveAnimals() {
+      xhr = new XMLHttpRequest()
+      xhr.onreadystatechange = handle_get_res
+      xhr.open("GET", "/animals")
+      xhr.send()
+    }
 
-    function addRow(tableID, beer) {
+    // Deletes the selected animals from db
+    function deleteAnimals() {
+      // Get all rows that have been selected
+      noDeleteFlag = true;
+      let ids = [];
+      checkboxes = document.getElementsByClassName("boxes");
+
+      console.log(checkboxes.length);
+
+      for (i = 0; i < checkboxes.length; i++) {
+        console.log(checkboxes[i].name);
+        console.log(checkboxes[i].checked);
+
+        if (checkboxes[i].checked) {
+          noDeleteFlag = true;
+
+          xhr = new XMLHttpRequest();
+          xhr.onreadystatechange = handle_delete_res;
+
+          var ConvertedJSON = {
+            "id": checkboxes[i].name,
+          };
+
+          xhr.open('DELETE', "/animals");
+          xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+          xhr.send( JSON.stringify(ConvertedJSON) );
+        }
+      }
+    }
+
+    function handle_get_res() {
+	     if(this.readyState != 4) return;
+	     if(this.status != 200) {
+         // error
+         console.log('Error')
+       }
+       console.log( JSON.parse(this.responseText) )
+       var results = JSON.parse(this.responseText)
+
+       // Iterate through all animals
+       results.forEach(function(d) {
+         displayAnimal("animals", d)
+       });
+    }
+
+    function handle_delete_res() {
+      if(this.readyState != 4) return;
+      if(this.status != 200) {
+        // error
+        console.log('Error')
+      }
+
+      // Reload page
+      window.location.reload(false);
+    }
+
+    // Adds animal as a row in the table
+    function displayAnimal(tableID, animal) {
     			var table = document.getElementById(tableID);
 
     			var rowCount = table.rows.length;
     			var row = table.insertRow(rowCount);
 
-          var fields = beer.fields;
+          // Give row id of animal
+          //row.id = animal.id;
 
-    			var name = row.insertCell(0);
-    			name.innerHTML = fields.name;
+          // First cell in row is check box
+          var check = row.insertCell(0);
+			    var checkbox = document.createElement("input");
+			    checkbox.type = "checkbox";
+          checkbox.name = animal.id;
+			    checkbox.classList.add('boxes');
+          check.appendChild(checkbox);
 
-    			var abv = row.insertCell(1);
-    			abv.innerHTML = fields.abv;
+    			var name = row.insertCell(1);
+    			name.innerHTML = animal.name;
+    			var breed = row.insertCell(2);
+    			breed.innerHTML = animal.breed;
+    			var gender = row.insertCell(3);
+          gender.innerHTML = animal.gender ? 'male' : 'female';
+          var age = row.insertCell(4);
+          age.innerHTML = animal.age;
+          var fromHere = row.insertCell(5);
+          fromHere.innerHTML = animal.fromhere;
+          var startDate = row.insertCell(6);
+          startDate.innerHTML = animal.startdate.replace(/T/, ' ').replace(/\..+/, '');
 
-    			var style = row.insertCell(2);
-          style.innerHTML = fields.style_name;
-
-          var category = row.insertCell(3);
-          category.innerHTML = fields.cat_name;
-
-          var brewer = row.insertCell(4);
-          brewer.innerHTML = fields.name_breweries;
-
-          var country = row.insertCell(5);
-          country.innerHTML = fields.country;
+          // Last cell in row is Edit button
+          var edit = row.insertCell(7);
+			    var editButton = document.createElement("input");
+			    editButton.type = "button";
+			    editButton.name = animal.id;
+          editButton.value = "Edit";
+          editButton.setAttribute("onclick", `goToForm('${animal.id}')`);
+          edit.appendChild(editButton);
     }
 
-    function populateTable() {
-      xhr = new XMLHttpRequest()
-      xhr.onreadystatechange = handle_res
-      xhr.open("GET", "/data")
-      xhr.send()
+    function goToForm(id) {
+      window.location.replace('/form.html?$' + id)
     }
-
-    function handle_res() {
-	     if(this.readyState != 4) return;
-	     if(this.status != 200) {
-         // error
-       }
-       console.log( JSON.parse(this.responseText) )
-       var results = JSON.parse(this.responseText);
-       results.forEach(function(d) {
-         addRow("results", d);
-       });
-    }
-
-    window.onload = populateTable;
+    // When results loads, get all animals
+    window.onload = retrieveAnimals;
     </script>
   </head>
-  <body style="background-image: url(barImage.jpg); background-size: cover;">
+   <body><!-- <body> TODO style="background-image: url(barImage.jpg); background-size: cover;"> -->
     <br>
-    <input id="back" type="button" value="Back" onclick="window.location='/index.html'"></input>
+    <div class="header">
+      <div class="header-left">
+        <img src="paw.jpg" height="200px" width="200px">
+      </div>
+      <div class="header-right">
+        <img src="paw.jpg" height="200px" width="200px">
+      </div>
+      <div class="header-middle">
+        <h1>Animal Shelter Tracker</h1>
+      </div>
+    </div>
+    <!-- <input id="add" type="button" value="Back" onclick="window.location='/index.html'"></input> -->
     <div class="content">
-      <table id="results" style="color:white">
+      <div class="buttons">
+        <div class="buttons-empty1"></div>
+        <div class="buttons-empty2"></div>
+        <div class="buttons-create">
+          <input id="create" type="button" value="+" onclick="window.location.replace('/form.html')"></input>
+        </div>
+        <div class="buttons-delete">
+          <input id="delete" type="button" value="-" onclick="deleteAnimals()"></input>
+        </div>
+      </div>
+      <table id="animals" style="color:white">
         <colgroup>
-          <col style="background-color:#ebb86e;">
-          <col span="5" style="background-color:#18343d">
+          <col span="8" style="background-color:#18343d">
         </colgroup>
         <tr>
+          <th></th>
           <th>Name</th>
-          <th>ABV</th>
-          <th>Style</th>
-          <th>Category</th>
-          <th>Brewer</th>
-          <th>Country</th>
+          <th>Breed</th>
+          <th>Gender</th>
+          <th>Age</th>
+          <th>Rescued From</th>
+          <th>Start Date</th>
+          <th>Edit</th>
         </tr>
       </table>
   </body>

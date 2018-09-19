@@ -3,21 +3,55 @@ fs = require('fs'),
 url = require('url'),
 path = require('path'),
 qs = require('querystring'),
-// XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest,
 port = 8000;
+// For connecting to Postgres
+const { Client } = require('pg');
 
+
+// db setup
+const client = new Client({
+  connectionString: 'postgres://hjxnvsrqrnlmdu:4b21f0ed4248cc69fc625ff2bfbb50b82a85faaa2ef6b389f5dfcdec1343e605@ec2-174-129-225-9.compute-1.amazonaws.com:5432/d8j0qsghq908nu',
+  ssl: true,
+});
+
+// Establish connection to db
+client.connect((err) => {
+  if (err) {
+    console.error('connection error', err.stack)
+  } else {
+    console.log('connected')
+  }
+});
+
+// TODO remove this
+client.query('SELECT table_schema,table_name FROM information_schema.tables;', (err, res) => {
+  if (err) throw err;
+  for (let row of res.rows) {
+    console.log(JSON.stringify(row));
+  }
+});
+
+// server setup
 var server = http.createServer(function(req, res) {
 var uri = url.parse(req.url)
 if (req.method === 'GET') {
-  switch (uri.pathname) {
+  var s = uri.pathname;
+  if (s.includes('?')) {
+    s = s.substring(0, s.indexOf('?'));
+  }
+  console.log(s);
+  switch (s) {
     case '/':
-      sendFile(res, 'public/index.html')
-      break;
-    case '/index.html':
-      sendFile(res, 'public/index.html')
+      sendFile(res, 'public/results.html')
       break;
     case '/results.html':
       sendFile(res, 'public/results.html')
+      break;
+    case '/form.html' :
+      sendFile(res, 'public/form.html')
+      break;
+    case '/edit.html' :
+      sendFile(res, 'public/edit.html')
       break;
     case '/css/style.css':
       sendFile(res, 'public/css/style.css', 'text/css')
@@ -25,107 +59,116 @@ if (req.method === 'GET') {
     case '/js/scripts.js':
       sendFile(res, 'public/js/scripts.js', 'text/javascript')
       break;
-    case '/data':
-      res.writeHead(200, {'Content-type': 'text/plain'})
-      res.end(JSON.stringify(results))
+    case '/animals':
+      var animals = [];
+      // Query db for all animals
+      client.query('SELECT * FROM myschema.animals;', (err, dbResponse) => {
+        if (err) throw err;
+
+        // Compile all animals into array
+        for (let row of dbResponse.rows) {
+          animals.push(row);
+        }
+
+        // Response
+        res.writeHead(200, {'Content-type': 'text/plain'});
+        res.end(JSON.stringify(animals));
+      });
       break;
     default:
-      res.end('404 not found')
+      res.end('404 not found');
   }
 } else if (req.method === 'POST') {
-  console.log("POST request");
-  var body = '';
-  req.on('data', function(data) {
-    body += data;
-  });
-  req.on('end', function() {
-    var formData = JSON.parse(body);
-    doAPICall(res, formData)
-  });
+  switch (uri.pathname) {
+    case '/animals':
+      let body = [];
+      req.on('data', (chunk) => {
+        body.push(chunk);
+      }).on('end', () => {
+        body = Buffer.concat(body).toString();
 
+        console.log(body);
+        animal = JSON.parse(body);
+
+        // Create animal with given information in db
+        query = `INSERT INTO myschema.animals
+                 (id, name, breed, gender, age, fromhere, startdate)
+                 VALUES ('${animal.id}',
+                   '${animal.name}',
+                   '${animal.breed}',
+                   ${animal.gender},
+                   ${animal.age},
+                   '${animal.from}',
+                   '${animal.date}');
+                   `;
+        client.query(query, (err, dbResponse) => {
+          if (err) throw err;
+          console.log(dbResponse);
+          // Response
+          res.writeHead(200, {'Content-type': 'text/plain'});
+          res.end();
+        });
+      })
+      break;
+    default:
+      res.end('404 not found');
+  }
+  // var body = '';
+  // req.on('data', function(data) {
+  //   body += data;
+  // });
+  // req.on('end', function() {
+  //   var formData = JSON.parse(body);
+  //   doAPICall(res, formData)
+  // });
 } else if (req.method === 'PUT') {
   // put to db
+  switch (uri.pathname) {
+    case '/animals':
+
+      break;
+    default:
+      res.end('404 not found');
+  }
 } else if (req.method === 'DELETE') {
-  get404(req, res);
+  switch (uri.pathname) {
+    case '/animals':
+      // Store the request body (id of animal) as a string
+      let body = [];
+      req.on('data', (chunk) => {
+        body.push(chunk);
+      }).on('end', () => {
+        body = Buffer.concat(body).toString();
+
+        console.log(body);
+        jsonID = JSON.parse(body);
+
+        // Delete animal of given id in db
+        query = `DELETE FROM myschema.animals
+                 WHERE id = ${jsonID.id};
+        `;
+        client.query(query, (err, dbResponse) => {
+          if (err) throw err;
+          console.log(dbResponse);
+          // Response
+          res.writeHead(200, {'Content-type': 'text/plain'});
+          res.end();
+        });
+      })
+      break;
+    default:
+      res.end('404 not found');
+  }
 } else {
   get404(req, res);
 }
 })
 
+// Launch server
 server.listen(process.env.PORT || port);
 console.log('listening on 8000')
 
-const { Client } = require('pg');
-
-const client = new Client({
-  connectionString: 'postgres://hjxnvsrqrnlmdu:4b21f0ed4248cc69fc625ff2bfbb50b82a85faaa2ef6b389f5dfcdec1343e605@ec2-174-129-225-9.compute-1.amazonaws.com:5432/d8j0qsghq908nu',
-  ssl: true,
-});
-
-client.connect();
-
-console.log('connected to client');
-
-client.query('SELECT table_schema,table_name FROM information_schema.tables;', (err, res) => {
-  if (err) throw err;
-  for (let row of res.rows) {
-    console.log(JSON.stringify(row));
-  }
-  client.end();
-});
-
-console.log('you already know');
-
-//   // The whole response has been received. Print out the result.
-//   resp.on('end', () => {
-//     //console.log(data);
-//     parsedData = JSON.parse(data);
-//     callback(res, alcLow, alcHigh, parsedData);
-//   });
-// }).on("error", (err) => {
-//   console.log("Error: " + err.message);
-// });
-// }
-
-// function processResponse(res, alcLow, alcHigh, parsedData) {
-// console.log(parsedData.nhits);
-// var alcByVolumeList = [];
-// for (var x = 0; x < parsedData.nhits; x++) {
-//   if (parsedData.records[x].fields.abv >= alcLow && parsedData.records[x].fields.abv <= alcHigh) {
-//     alcByVolumeList.push(parsedData.records[x]);
-//   }
-// }
-//
-// // Get random beer from returned list
-// var beer = alcByVolumeList[Math.floor(Math.random()*alcByVolumeList.length)];
-//
-// // Add beer to results array to be stored in memory
-// results.push(beer);
-//
-// // Send response back to client with recommended beer
-// res.writeHead(200, {'Content-Type': 'application/x-www-form-urlencoded'});
-// res.end(JSON.stringify(beer));
-// }
-//
-// function get404(req, res) {
-// //fill in
-// }
-//
-// function chooseDrink(res){
-// var drinks = ["Skim Milk",
-//               "1% Milk",
-//               "2% Milk",
-//               "Whole Milk",
-//               "Chocolate Milk",
-//               "Apple Juice",
-//               "Orange Juice",
-//               "Cranberry Juice",
-//               "La Croix Seltzer"];
-// var rand = drinks[Math.floor(Math.random() * drinks.length)];
-// res.writeHead(200, {'Content-Type': 'text/plain'});
-// res.end(rand);
-// }
-
+// Helper functions
 function sendFile(res, filename, contentType) {
   contentType = contentType || 'text/html';
 

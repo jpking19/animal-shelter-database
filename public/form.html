@@ -1,0 +1,183 @@
+<html lang="en">
+<head>
+  <style src="css/style.css">
+    input[type=text], select, textarea {
+      width: 100%;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      resize: vertical;
+    }
+    .content {
+      position: relative;
+      top: 50%;
+      left: 50%;
+      width: 900px;
+      height: 680px;
+      margin-left:-450px;
+      margin-top:-500px;
+      border-radius: 25px;
+      background-color: #f2f2f2;
+      padding: 25px;
+    }
+    .title {
+      margin: auto;
+      margin-top: 150px;
+      width: 100%;
+      text-align: center;
+    }
+    label {
+      font-size: 20px;
+      font-weight: bold;
+    }
+    #submit {
+      position: relative;
+      float: left;
+      background-color: #4CAF50;
+      color: white;
+      padding: 12px 20px;
+      margin-left: 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 25px;
+    }
+    #cancel {
+      position: relative;
+      float: right;
+      background-color: #A9A9A9;
+      color: white;
+      padding: 12px 20px;
+      margin-right: 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 25px;
+    }
+  </style>
+  <title>CS4241 Assignment 2</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="css/style.css" />
+  <link rel="icon" href="https://freestencilgallery.com/wp-content/uploads/2016/07/Dog-Paw-Print-Stencil-thumb.jpg">
+  <script>
+  // On load, check if this is an edit
+  //window.onload = checkURL;
+
+  function checkURL() {
+    let urlParams = new URLSearchParams(window.location.search);
+    let id = urlParams.get('id');
+    // If an id was supplied, call retrieveAnimal
+    if (id) {
+      retrieveAnimal();
+    }
+  }
+
+  // Gets one animal of the given id from the db
+  function retrieveAnimal(id) {
+    xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = handle_get_res;
+    xhr.open("GET", "/animal");
+    xhr.send();
+  }
+
+  function saveData() {
+    var id = document.getElementById('id').value;
+    if (id) {
+      updateAnimal();
+    } else {
+      createAnimal();
+    }
+  }
+
+  function createAnimal() {
+    var animal = {};
+    // Generate new unique id
+    animal.id = Date.now().toString(36);
+
+    // TODO Input validation
+
+    animal.name = document.getElementById('name').value;
+    animal.breed = document.getElementById('breed').value;
+    animal.from = document.getElementById('from').value;
+    animal.age = document.getElementById('age').value;
+
+    animal.gender = document.getElementById('gender').value;
+
+    // Get current date
+    var d = new Date();
+    animal.date = d;
+
+    xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = handle_post_res;
+    xhr.open("POST", "/animals");
+    xhr.send( JSON.stringify(animal) );
+  }
+
+  // funciton updateAnimal() {
+  //   animal.id = document.getElementById('id').value;
+  // }
+
+  function handle_get_res() {
+    if(this.readyState != 4) return;
+    if(this.status != 200) {
+      // error
+      console.log('Error')
+    }
+    console.log( JSON.parse(this.responseText) )
+    var results = JSON.parse(this.responseText)
+
+    // Populate form
+    retrieveAnimal();
+  }
+
+  function handle_post_res() {
+    if(this.readyState != 4) return;
+    if(this.status != 200) {
+      // error
+      console.log('Error')
+    }
+  }
+
+  </script>
+</head>
+<body>
+  <div class="title">
+
+  </div>
+  <div class="content">
+    <h1 style="size: 50px">Add a pet to the database to keep track of its information!</h1>
+    <form id="form">
+      <label for="id">ID</label>
+      <input type="text" id="id" name="id" disabled="true">
+
+      <label for="name">Name</label>
+      <input type="text" id="name" name="name" placeholder="The pet's name...">
+
+      <label for="breed">Breed</label>
+      <input type="text" id="breed" name="breed" placeholder="The pet's breed...">
+
+      <label for="age">Age (years)</label>
+      <input type="text" id="age" name="age" placeholder="The pet's age...">
+
+      <label for="from">Where was the pet originally rescued from?</label>
+      <input type="text" id="from" name="from" placeholder="The pet's old location...">
+
+      <label for="gender">Gender</label>
+      <select id="gender" name="gender">
+        <option value="1">Male</option>
+        <option value="0">Female</option>
+      </select>
+      <br>
+    </form>
+    <div class="buttons">
+        <input id="submit" type="button" value="Submit" onclick="saveData()"></input>
+      </div>
+        <input id="cancel" type="button" value="Cancel" onclick="window.location.replace('/results.html')"></input>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
