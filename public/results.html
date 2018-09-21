@@ -229,7 +229,7 @@
           var fromHere = row.insertCell(5);
           fromHere.innerHTML = animal.fromhere;
           var startDate = row.insertCell(6);
-          startDate.innerHTML = animal.startdate.replace(/T/, ' ').replace(/\..+/, '');
+          startDate.innerHTML = animal.startdate.replace(/T/, ' ').replace(/\..+/, '').substring(0, 10);
 
           // Last cell in row is Edit button
           var edit = row.insertCell(7);
