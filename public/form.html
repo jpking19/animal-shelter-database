@@ -4,7 +4,6 @@
     input[type=text], select, textarea {
       width: 100%;
       padding: 15px;
-      border: 1px solid #ccc;
       border-radius: 5px;
       box-sizing: border-box;
       margin-top: 5px;
@@ -16,7 +15,7 @@
       top: 50%;
       left: 50%;
       width: 900px;
-      height: 680px;
+      height: 700px;
       margin-left:-450px;
       margin-top:-500px;
       border-radius: 25px;
@@ -36,7 +35,7 @@
     #submit {
       position: relative;
       float: left;
-      background-color: #4CAF50;
+      background-color: #00cc00;
       color: white;
       padding: 12px 20px;
       margin-left: 20px;
@@ -57,6 +56,31 @@
       cursor: pointer;
       font-size: 25px;
     }
+    .preshake {
+      border: 1px solid #ccc;
+    }
+    .shake {
+      animation: shake 0.5s;
+      animation-iteration-count: 1;
+      border: 1px solid #FF0000;
+    }
+    @keyframes shake {
+      10%, 90% {
+        transform: translate3d(-1px, 0, 0);
+      }
+
+      20%, 80% {
+        transform: translate3d(2px, 0, 0);
+      }
+
+      30%, 50%, 70% {
+        transform: translate3d(-4px, 0, 0);
+      }
+
+      40%, 60% {
+        transform: translate3d(4px, 0, 0);
+      }
+    }
   </style>
   <title>CS4241 Assignment 2</title>
   <meta charset="utf-8">
@@ -64,26 +88,74 @@
   <link rel="icon" href="https://freestencilgallery.com/wp-content/uploads/2016/07/Dog-Paw-Print-Stencil-thumb.jpg">
   <script>
   // On load, check if this is an edit
-  //window.onload = checkURL;
+  window.onload = checkURL;
 
   function checkURL() {
     let urlParams = new URLSearchParams(window.location.search);
+    console.log(window.location.search);
+    for (let p of urlParams) {
+      console.log(p);
+    }
     let id = urlParams.get('id');
     // If an id was supplied, call retrieveAnimal
     if (id) {
-      retrieveAnimal();
+      retrieveAnimal(id);
     }
   }
 
-  // Gets one animal of the given id from the db
-  function retrieveAnimal(id) {
-    xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = handle_get_res;
-    xhr.open("GET", "/animal");
-    xhr.send();
-  }
-
+  // Saves the data inputed by the user
   function saveData() {
+    var isError = false;
+    // Input validation
+    var name = document.getElementById('name');
+    var breed = document.getElementById('breed');
+    var from = document.getElementById('from');
+    var age = document.getElementById('age');
+
+    if (name.value == null || name.value == "") {
+      // Display error to user
+      name.classList.remove('preshake')
+      name.classList.add('shake');
+      isError = true;
+    } else {
+      name.classList.remove('shake');
+      name.classList.add('preshake');
+    }
+
+    if (breed.value == null || breed.value == "") {
+      // Display error to user
+      breed.classList.remove('preshake')
+      breed.classList.add('shake');
+      isError = true;
+    } else {
+      breed.classList.remove('shake');
+      breed.classList.add('preshake');
+    }
+
+    if (from.value == null || from.value == "") {
+      // Display error to user
+      from.classList.remove('preshake')
+      from.classList.add('shake');
+      isError = true;
+    } else {
+      from.classList.remove('shake');
+      from.classList.add('preshake');
+    }
+
+    if (age.value == null || age.value == "" || !Number.isInteger(parseInt(age.value))) {
+      // Display error to user
+      age.classList.remove('preshake')
+      age.classList.add('shake');
+      isError = true;
+    } else {
+      age.classList.remove('shake');
+      age.classList.add('preshake');
+    }
+
+    if (isError) {
+      return;
+    }
+
     var id = document.getElementById('id').value;
     if (id) {
       updateAnimal();
@@ -92,12 +164,25 @@
     }
   }
 
+  // Gets one animal of the given id from the db
+  function retrieveAnimal(id) {
+    xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = handle_get_res;
+
+    var ConvertedJSON = {
+      "id": id,
+    };
+
+    xhr.open("POST", "/animal");
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.send( JSON.stringify(ConvertedJSON) );
+  }
+
   function createAnimal() {
     var animal = {};
+
     // Generate new unique id
     animal.id = Date.now().toString(36);
-
-    // TODO Input validation
 
     animal.name = document.getElementById('name').value;
     animal.breed = document.getElementById('breed').value;
@@ -116,29 +201,50 @@
     xhr.send( JSON.stringify(animal) );
   }
 
-  // funciton updateAnimal() {
-  //   animal.id = document.getElementById('id').value;
-  // }
+  function updateAnimal() {
+    var animal = {};
+
+    animal.id = document.getElementById('id').value;
+    animal.name = document.getElementById('name').value;
+    animal.breed = document.getElementById('breed').value;
+    animal.from = document.getElementById('from').value;
+    animal.age = document.getElementById('age').value;
+    animal.gender = document.getElementById('gender').value;
+
+    xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = handle_post_res;
+    xhr.open("PUT", "/animals", true);
+    xhr.send( JSON.stringify(animal) );
+  }
 
   function handle_get_res() {
     if(this.readyState != 4) return;
     if(this.status != 200) {
       // error
-      console.log('Error')
+      console.log('Error');
     }
-    console.log( JSON.parse(this.responseText) )
+
     var results = JSON.parse(this.responseText)
 
     // Populate form
-    retrieveAnimal();
+    document.getElementById('id').value = results.id;
+    document.getElementById('name').value = results.name;
+    document.getElementById('breed').value = results.breed;
+    document.getElementById('from').value = results.fromhere;
+    document.getElementById('age').value = results.age;
+    document.getElementById('gender').value = results.gender;
+    document.getElementById('header').innerHTML = "Modify your pet's information!";
   }
 
   function handle_post_res() {
     if(this.readyState != 4) return;
     if(this.status != 200) {
       // error
-      console.log('Error')
+      console.log('Error');
     }
+
+    // Go back to results.html
+    window.location.replace('/results.html');
   }
 
   </script>
@@ -148,25 +254,25 @@
 
   </div>
   <div class="content">
-    <h1 style="size: 50px">Add a pet to the database to keep track of its information!</h1>
+    <h1 id="header" style="size: 50px">Add a pet to the database to keep track of its information!</h1>
     <form id="form">
       <label for="id">ID</label>
-      <input type="text" id="id" name="id" disabled="true">
+      <input type="text" id="id" class="preshake" name="id" disabled="true">
 
       <label for="name">Name</label>
-      <input type="text" id="name" name="name" placeholder="The pet's name...">
+      <input type="text" id="name" class="preshake" name="name" placeholder="The pet's name...">
 
       <label for="breed">Breed</label>
-      <input type="text" id="breed" name="breed" placeholder="The pet's breed...">
+      <input type="text" id="breed" class="preshake" name="breed" placeholder="The pet's breed...">
 
       <label for="age">Age (years)</label>
-      <input type="text" id="age" name="age" placeholder="The pet's age...">
+      <input type="text" id="age" class="preshake" name="age" placeholder="The pet's age...">
 
       <label for="from">Where was the pet originally rescued from?</label>
-      <input type="text" id="from" name="from" placeholder="The pet's old location...">
+      <input type="text" id="from" class="preshake" name="from" placeholder="The pet's old location...">
 
       <label for="gender">Gender</label>
-      <select id="gender" name="gender">
+      <select id="gender" name="gender" class="preshake">
         <option value="1">Male</option>
         <option value="0">Female</option>
       </select>

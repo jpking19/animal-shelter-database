@@ -2,7 +2,7 @@
   <head>
     <style src="css/style.css">
       .header {
-        background-color: #F1F1F1;
+        background-color: #000000;
         height: 220px;
         padding: 20px;
       }
@@ -23,6 +23,16 @@
         float: left;
         width: 35%;
         margin: auto;
+      }
+      .boxes {
+        height: 20px;
+        width: 20px;
+        background-color: #eee;
+        cursor: pointer;
+      }
+      h1 {
+        color: #ffffff;
+        font-size: 50px;
       }
       .buttons {
         height: 80px;
@@ -54,20 +64,71 @@
         width: 10%;
         margin: auto
       }
-      .boxes {
-
-      }
-      #delete {
+      .edit-button {
         position: relative;
-        top: 0;
-        left: 0;
-        width: 80px;
-        height: 80px;
+        width: 120px;
+        height: 40px;
+        float: left;
+        background-color: #FFA500;
+        color: white;
+        padding: 10px 20px;
+        margin-left: 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 20px;
+      }
+      p {
+        font: bold 20px Tahoma;
+        color: #000000;
+        text-align: center;
+      }
+      table {
+          position: relative;
+          top: 50%;
+          left: 50%;
+          margin-top: 20px;
+          margin-left:-45%;
+          font-family: arial, sans-serif;
+          border-collapse: collapse;
+          width: 90%;
+          background-color: #ffffff;
+      }
+      tr:nth-child(even) {
+          background-color: #f2f2f2;
+      }
+      th, td {
+          border: 2px solid #000000;
+          text-align: left;
+          padding: 10px;
       }
       #create {
         position: relative;
         width: 80px;
         height: 80px;
+        float: left;
+        background-color: #00cc00;
+        color: white;
+        padding: 20px 20px;
+        margin-left: 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 45px;
+      }
+      #delete {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        float: right;
+        background-color: #FF0000;
+        color: white;
+        padding: 20px 20px;
+        margin-right: 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 45px;
       }
     </style>
     <title>CS4241 Assignment 3</title>
@@ -95,6 +156,8 @@
       for (i = 0; i < checkboxes.length; i++) {
         console.log(checkboxes[i].name);
         console.log(checkboxes[i].checked);
+
+        alert(checkboxes[i].checked)
 
         if (checkboxes[i].checked) {
           noDeleteFlag = true;
@@ -176,13 +239,16 @@
 			    editButton.type = "button";
 			    editButton.name = animal.id;
           editButton.value = "Edit";
+          editButton.classList.add('edit-button')
           editButton.setAttribute("onclick", `goToForm('${animal.id}')`);
           edit.appendChild(editButton);
     }
 
+    // Has to be in function so it only navigates once
     function goToForm(id) {
-      window.location.replace('/form.html?$' + id)
+      window.location.replace('/form.html?id=' + id)
     }
+
     // When results loads, get all animals
     window.onload = retrieveAnimals;
     </script>
@@ -191,13 +257,13 @@
     <br>
     <div class="header">
       <div class="header-left">
-        <img src="paw.jpg" height="200px" width="200px">
+        <img src="/paw.jpg" height="200px" width="200px">
       </div>
       <div class="header-right">
-        <img src="paw.jpg" height="200px" width="200px">
+        <img src="/paw.jpg" height="200px" width="200px">
       </div>
       <div class="header-middle">
-        <h1>Animal Shelter Tracker</h1>
+        <h1>Animal Shelter Database</h1>
       </div>
     </div>
     <!-- <input id="add" type="button" value="Back" onclick="window.location='/index.html'"></input> -->
@@ -212,9 +278,11 @@
           <input id="delete" type="button" value="-" onclick="deleteAnimals()"></input>
         </div>
       </div>
-      <table id="animals" style="color:white">
+      <table id="animals" style="color:black">
         <colgroup>
-          <col span="8" style="background-color:#18343d">
+          <col span="1" style="background-color:#ffffff; align:center; width: 20px">
+          <col span="6" style="background-color:#ffffff">
+          <col span="1" style="background-color:#ffffff; align:center; width: 20px">
         </colgroup>
         <tr>
           <th></th>
@@ -224,7 +292,7 @@
           <th>Age</th>
           <th>Rescued From</th>
           <th>Start Date</th>
-          <th>Edit</th>
+          <th></th>
         </tr>
       </table>
   </body>

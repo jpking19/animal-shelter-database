@@ -7,7 +7,6 @@ port = 8000;
 // For connecting to Postgres
 const { Client } = require('pg');
 
-
 // db setup
 const client = new Client({
   connectionString: 'postgres://hjxnvsrqrnlmdu:4b21f0ed4248cc69fc625ff2bfbb50b82a85faaa2ef6b389f5dfcdec1343e605@ec2-174-129-225-9.compute-1.amazonaws.com:5432/d8j0qsghq908nu',
@@ -23,14 +22,6 @@ client.connect((err) => {
   }
 });
 
-// TODO remove this
-client.query('SELECT table_schema,table_name FROM information_schema.tables;', (err, res) => {
-  if (err) throw err;
-  for (let row of res.rows) {
-    console.log(JSON.stringify(row));
-  }
-});
-
 // server setup
 var server = http.createServer(function(req, res) {
 var uri = url.parse(req.url)
@@ -39,7 +30,6 @@ if (req.method === 'GET') {
   if (s.includes('?')) {
     s = s.substring(0, s.indexOf('?'));
   }
-  console.log(s);
   switch (s) {
     case '/':
       sendFile(res, 'public/results.html')
@@ -59,10 +49,14 @@ if (req.method === 'GET') {
     case '/js/scripts.js':
       sendFile(res, 'public/js/scripts.js', 'text/javascript')
       break;
+    case '/paw.jpg' :
+      sendFile(res, 'paw.jpg')
+      break;
     case '/animals':
       var animals = [];
       // Query db for all animals
-      client.query('SELECT * FROM myschema.animals;', (err, dbResponse) => {
+      query = 'SELECT * FROM myschema.animals;';
+      client.query(query, (err, dbResponse) => {
         if (err) throw err;
 
         // Compile all animals into array
@@ -81,13 +75,13 @@ if (req.method === 'GET') {
 } else if (req.method === 'POST') {
   switch (uri.pathname) {
     case '/animals':
+      // Store the request body (animal data) as a string
       let body = [];
       req.on('data', (chunk) => {
         body.push(chunk);
       }).on('end', () => {
         body = Buffer.concat(body).toString();
 
-        console.log(body);
         animal = JSON.parse(body);
 
         // Create animal with given information in db
@@ -110,22 +104,61 @@ if (req.method === 'GET') {
         });
       })
       break;
+    case '/animal':
+      // Store the request body (id of animal) as a string
+      var body2 = '';
+      req.on('data', function(data) {
+        body2 += data;
+      });
+      req.on('end', function() {
+        var jsonID = JSON.parse(body2);
+
+        // Query db for animal with given id
+        var animal = {};
+        query = `SELECT * FROM myschema.animals WHERE id = '${jsonID.id}';`;
+        client.query(query, (err, dbResponse) => {
+          if (err) throw err;
+
+          // Compile all animals into array
+          animal = dbResponse.rows[0];
+
+          // Response
+          res.writeHead(200, {'Content-type': 'text/plain'});
+          res.end( JSON.stringify(animal) );
+        });
+      });
+      break;
     default:
       res.end('404 not found');
   }
-  // var body = '';
-  // req.on('data', function(data) {
-  //   body += data;
-  // });
-  // req.on('end', function() {
-  //   var formData = JSON.parse(body);
-  //   doAPICall(res, formData)
-  // });
 } else if (req.method === 'PUT') {
-  // put to db
   switch (uri.pathname) {
     case '/animals':
+      // Store the request body (animal data) as a string
+      let body = [];
+      req.on('data', (chunk) => {
+        body.push(chunk);
+      }).on('end', () => {
+        body = Buffer.concat(body).toString();
+        animal = JSON.parse(body);
 
+        // Create animal with given information in db
+        query = `UPDATE myschema.animals
+                SET name = '${animal.name}',
+                breed = '${animal.breed}',
+                gender = ${animal.gender},
+                age = ${animal.age},
+                fromhere = '${animal.from}'
+                WHERE id = '${animal.id}'
+                   `;
+        client.query(query, (err, dbResponse) => {
+          if (err) throw err;
+
+          // Response
+          res.writeHead(200, {'Content-type': 'text/plain'});
+          res.end();
+        });
+      })
       break;
     default:
       res.end('404 not found');
@@ -139,8 +172,6 @@ if (req.method === 'GET') {
         body.push(chunk);
       }).on('end', () => {
         body = Buffer.concat(body).toString();
-
-        console.log(body);
         jsonID = JSON.parse(body);
 
         // Delete animal of given id in db
@@ -149,7 +180,7 @@ if (req.method === 'GET') {
         `;
         client.query(query, (err, dbResponse) => {
           if (err) throw err;
-          console.log(dbResponse);
+
           // Response
           res.writeHead(200, {'Content-type': 'text/plain'});
           res.end();
