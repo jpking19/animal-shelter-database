@@ -11,6 +11,6 @@ Animal Shelter Database: https://a3-jpking19.herokuapp.com/
 - **Tech Achievement 2**: Form validates that user has inputed all required information in the correct format (integer required in age field) so that empty information can't be stored in the database
 - **Tech Achievement 3**: Can delete multiple pets from the database at the same time
 
-### Design/Evaluation Achievements
+## Design/Evaluation Achievements
 - **Design Achievement 1**: Form designed to be appealing and easy to use
 - **Design Achievement 2**: Created CSS animations for input validation on the form (makes it clear to users when they forget to enter the correct information)
